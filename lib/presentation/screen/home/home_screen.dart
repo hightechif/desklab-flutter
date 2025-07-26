@@ -3,6 +3,7 @@ import 'package:desklab/presentation/screen/home/activity/activity_detail_screen
 import 'package:desklab/presentation/screen/home/leave/leave_screen.dart';
 import 'package:desklab/presentation/screen/home/specialwork/special_work_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -79,13 +80,7 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildWeeklyActivityCard(BuildContext context) {
     return GestureDetector(
-      onTap:
-          () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const ActivityDetailScreen(),
-            ),
-          ),
+      onTap: () => context.push('/activity-details'),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

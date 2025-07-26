@@ -1,6 +1,7 @@
 import 'package:desklab/domain/models/employee.dart';
 import 'package:desklab/presentation/screen/employee/employee_detail_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class EmployeeListScreen extends StatefulWidget {
   const EmployeeListScreen({super.key});
@@ -162,14 +163,8 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                   final employee = employeeList[empIndex];
                   return GestureDetector(
                     onTap:
-                        () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) =>
-                                    EmployeeDetailScreen(employee: employee),
-                          ),
-                        ),
+                        () =>
+                            context.push('/employee-details', extra: employee),
                     child: Container(
                       margin: const EdgeInsets.symmetric(
                         horizontal: 16,

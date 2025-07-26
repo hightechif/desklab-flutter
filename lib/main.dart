@@ -1,5 +1,5 @@
+import 'package:desklab/core/routing/app_router.dart';
 import 'package:desklab/presentation/providers/activity_provider.dart';
-import 'package:desklab/presentation/screen/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -29,7 +29,8 @@ class DeskLabApp extends StatelessWidget {
       ),
     );
 
-    return MaterialApp(
+    return MaterialApp.router(
+      routerConfig: router,
       debugShowCheckedModeBanner: false,
       title: 'DeskLab',
       theme: ThemeData(
@@ -41,7 +42,6 @@ class DeskLabApp extends StatelessWidget {
           bodyMedium: TextStyle(color: Color(0xFF555555)),
         ),
       ),
-      home: const MainScreen(),
     );
   }
 }
