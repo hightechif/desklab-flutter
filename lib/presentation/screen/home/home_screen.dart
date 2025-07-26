@@ -1,8 +1,10 @@
 import 'package:desklab/domain/models/calendar_event.dart';
+import 'package:desklab/presentation/providers/activity_provider.dart';
 import 'package:desklab/presentation/screen/home/leave/leave_screen.dart';
 import 'package:desklab/presentation/screen/home/specialwork/special_work_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -47,6 +49,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen to the provider to get real-time updates for the weekly hours.
+    final activityProvider = Provider.of<ActivityProvider>(context);
+    int weeklyHours = 0;
+    activityProvider.activitiesByDay.forEach((day, activities) {
+      for (var activity in activities) {
+        weeklyHours += activity.hours;
+      }
+    });
+
     return Scaffold(
       body: SafeArea(
         // Use a Column to separate static content from the scrollable list
@@ -60,7 +71,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   _buildHeader(),
                   const SizedBox(height: 24),
-                  _buildWeeklyActivityCard(context),
+                  // Pass the dynamic weekly hours to the card widget.
+                  _buildWeeklyActivityCard(context, weeklyHours),
                   const SizedBox(height: 16),
                   _buildActionButtons(context),
                   const SizedBox(height: 24),
@@ -144,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildWeeklyActivityCard(BuildContext context) {
+  Widget _buildWeeklyActivityCard(BuildContext context, int weeklyHours) {
     return GestureDetector(
       onTap: () => context.push('/activity-details'),
       child: Container(
@@ -171,18 +183,18 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const Icon(Icons.library_books, color: Colors.blue),
             ),
             const SizedBox(width: 16),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Aktivitas Minggu Ini',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    '13 dari 40 jam aktivitas',
-                    style: TextStyle(color: Colors.grey),
+                    '$weeklyHours dari 40 jam aktivitas',
+                    style: const TextStyle(color: Colors.grey),
                   ),
                 ],
               ),
