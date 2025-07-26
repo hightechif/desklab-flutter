@@ -52,12 +52,12 @@ class LeaveScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: ElevatedButton(
           onPressed: () {},
-          child: const Text('Ajukan Cuti'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 16),
           ),
+          child: const Text('Ajukan Cuti'),
         ),
       ),
     );

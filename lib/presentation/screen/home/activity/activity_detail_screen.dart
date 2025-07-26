@@ -1,7 +1,9 @@
-import 'package:desklab/domain/models/activity.dart';
-import 'package:desklab/presentation/screen/home/activity/add_activity_screen.dart';
-import 'package:desklab/presentation/screen/home/activity/report/report_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../../domain/models/activity.dart';
+import '../../../providers/activity_provider.dart';
+import 'add_activity_screen.dart';
+import 'report/report_screen.dart';
 
 class ActivityDetailScreen extends StatefulWidget {
   const ActivityDetailScreen({super.key});
@@ -10,181 +12,32 @@ class ActivityDetailScreen extends StatefulWidget {
 }
 
 class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
-  late Map<int, List<Activity>> _activitiesByDay;
-  int _selectedDayIndex = 0; // 0 for Monday, 6 for Sunday
-  int _dailyHours = 0;
-  int _weeklyHours = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    // Initial data based on screenshots
-    _activitiesByDay = {
-      0: [
-        // Monday
-        Activity(
-          project: 'EDTS-ADMIN-ADMIN-TRAINING',
-          activityName: 'Sharing Session',
-          hours: 5,
-          color: Colors.brown,
-        ),
-        Activity(
-          project: 'KLIK-CORP-KLIK-DEVELOPMENT',
-          activityName: 'Development',
-          hours: 4,
-          color: const Color(0xFF4A6572),
-        ),
-      ],
-      2: [
-        // Wednesday
-        Activity(
-          project: 'EDTS-ADMIN-ADMIN-LEAVE',
-          activityName: 'Annual Leave',
-          hours: 4,
-          color: Colors.purple,
-        ),
-      ],
-    };
-    _calculateHours();
-  }
-
-  void _calculateHours() {
-    int daily = 0;
-    int weekly = 0;
-
-    // Calculate daily hours for the selected day
-    final activitiesForSelectedDay = _activitiesByDay[_selectedDayIndex] ?? [];
-    for (var activity in activitiesForSelectedDay) {
-      daily += activity.hours;
-    }
-
-    // Calculate total weekly hours
-    _activitiesByDay.forEach((day, activities) {
-      for (var activity in activities) {
-        weekly += activity.hours;
-      }
-    });
-
-    setState(() {
-      _dailyHours = daily;
-      _weeklyHours = weekly;
-    });
-  }
-
-  void _addActivity(Activity activity) {
-    setState(() {
-      // Add activity to the selected day
-      if (_activitiesByDay.containsKey(_selectedDayIndex)) {
-        _activitiesByDay[_selectedDayIndex]!.add(activity);
-      } else {
-        _activitiesByDay[_selectedDayIndex] = [activity];
-      }
-      _calculateHours();
-    });
-    _showSuccessSnackbar("Anda berhasil menambahkan aktivitas");
-  }
-
-  void _updateActivity(int listIndex, Activity activity) {
-    setState(() {
-      _activitiesByDay[_selectedDayIndex]![listIndex] = activity;
-      _calculateHours();
-    });
-    _showSuccessSnackbar("Anda berhasil mengubah aktivitas");
-  }
-
-  void _deleteActivity(int listIndex) {
-    setState(() {
-      _activitiesByDay[_selectedDayIndex]!.removeAt(listIndex);
-      if (_activitiesByDay[_selectedDayIndex]!.isEmpty) {
-        _activitiesByDay.remove(_selectedDayIndex);
-      }
-      _calculateHours();
-    });
-    _showSuccessSnackbar("Anda berhasil menghapus aktivitas");
-  }
-
-  void _showDeleteConfirmation(int listIndex) {
-    showDialog(
-      context: context,
-      builder:
-          (BuildContext context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            title: const Text('Hapus Aktivitas?'),
-            content: const Text('Aktivitas ini akan dihapus.'),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Tidak'),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              ElevatedButton(
-                child: const Text('Ya, Hapus'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _deleteActivity(listIndex);
-                },
-              ),
-            ],
-          ),
-    );
-  }
-
-  void _showSuccessSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(message),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-
-  void _navigateToAddScreen() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const AddActivityScreen()),
-    );
-    if (result != null && result is Activity) _addActivity(result);
-  }
-
-  void _navigateToEditScreen(int listIndex) async {
-    final activityToEdit = _activitiesByDay[_selectedDayIndex]![listIndex];
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddActivityScreen(activity: activityToEdit),
-      ),
-    );
-    if (result != null && result is Activity) {
-      _updateActivity(listIndex, result);
-    } else if (result == 'delete') {
-      _showDeleteConfirmation(listIndex);
-    }
-  }
+  int _selectedDayIndex = 0;
 
   void _selectDay(int dayIndex) {
     setState(() {
       _selectedDayIndex = dayIndex;
-      _calculateHours();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentActivities = _activitiesByDay[_selectedDayIndex] ?? [];
+    final activityProvider = Provider.of<ActivityProvider>(context);
+    final currentActivities = activityProvider.getActivitiesForDay(
+      _selectedDayIndex,
+    );
+
+    int dailyHours = 0;
+    for (var activity in currentActivities) {
+      dailyHours += activity.hours;
+    }
+
+    int weeklyHours = 0;
+    activityProvider.activitiesByDay.forEach((day, activities) {
+      for (var activity in activities) {
+        weeklyHours += activity.hours;
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -225,7 +78,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
               children: [
                 _buildDateSelector(),
                 const SizedBox(height: 24),
-                _buildDailyHoursCard(),
+                _buildDailyHoursCard(dailyHours),
                 const SizedBox(height: 24),
                 currentActivities.isEmpty
                     ? _buildNoActivityView()
@@ -239,7 +92,18 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 80.0),
         child: ElevatedButton.icon(
-          onPressed: _navigateToAddScreen,
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AddActivityScreen(),
+              ),
+            );
+            if (result != null && result is Activity) {
+              activityProvider.addActivity(_selectedDayIndex, result);
+              _showSuccessSnackbar("Anda berhasil menambahkan aktivitas");
+            }
+          },
           icon: const Icon(Icons.add),
           label: const Text('Tambah Aktivitas'),
           style: ElevatedButton.styleFrom(
@@ -252,11 +116,15 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
           ),
         ),
       ),
-      bottomSheet: _buildWeeklyProgress(),
+      bottomSheet: _buildWeeklyProgress(weeklyHours),
     );
   }
 
   Widget _buildActivityList(List<Activity> activities) {
+    final activityProvider = Provider.of<ActivityProvider>(
+      context,
+      listen: false,
+    );
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -264,7 +132,20 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
       itemBuilder: (context, index) {
         final activity = activities[index];
         return GestureDetector(
-          onTap: () => _navigateToEditScreen(index),
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddActivityScreen(activity: activity),
+              ),
+            );
+            if (result != null && result is Activity) {
+              activityProvider.updateActivity(_selectedDayIndex, index, result);
+              _showSuccessSnackbar("Anda berhasil mengubah aktivitas");
+            } else if (result == 'delete') {
+              _showDeleteConfirmation(index);
+            }
+          },
           child: Card(
             margin: const EdgeInsets.only(bottom: 12),
             shape: RoundedRectangleBorder(
@@ -402,7 +283,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
-  Widget _buildDailyHoursCard() {
+  Widget _buildDailyHoursCard(int dailyHours) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -418,7 +299,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           Text(
-            '$_dailyHours',
+            '$dailyHours',
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
         ],
@@ -458,7 +339,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
-  Widget _buildWeeklyProgress() {
+  Widget _buildWeeklyProgress(int weeklyHours) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
@@ -478,14 +359,14 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '$_weeklyHours/40',
+                  '$weeklyHours/40',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             LinearProgressIndicator(
-              value: _weeklyHours > 0 ? _weeklyHours / 40 : 0,
+              value: weeklyHours > 0 ? weeklyHours / 40 : 0,
               backgroundColor: Colors.grey[300],
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
               minHeight: 6,
@@ -494,6 +375,60 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showSuccessSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(message),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(int listIndex) {
+    final activityProvider = Provider.of<ActivityProvider>(
+      context,
+      listen: false,
+    );
+    showDialog(
+      context: context,
+      builder:
+          (BuildContext context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            title: const Text('Hapus Aktivitas?'),
+            content: const Text('Aktivitas ini akan dihapus.'),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Tidak'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Ya, Hapus'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  activityProvider.deleteActivity(_selectedDayIndex, listIndex);
+                  _showSuccessSnackbar("Anda berhasil menghapus aktivitas");
+                },
+              ),
+            ],
+          ),
     );
   }
 }

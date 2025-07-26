@@ -1,9 +1,16 @@
+import 'package:desklab/presentation/providers/activity_provider.dart';
 import 'package:desklab/presentation/screen/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const DeskLabApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ActivityProvider(),
+      child: const DeskLabApp(),
+    ),
+  );
 }
 
 class DeskLabApp extends StatelessWidget {
