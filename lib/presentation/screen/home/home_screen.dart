@@ -4,23 +4,90 @@ import 'package:desklab/presentation/screen/home/specialwork/special_work_screen
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String _selectedFilter = 'Semua';
+  late List<CalendarEvent> _allEvents;
+  late List<CalendarEvent> _filteredEvents;
+
+  @override
+  void initState() {
+    super.initState();
+    _allEvents = _getCalendarEvents();
+    _updateFilteredEvents();
+  }
+
+  void _updateFilter(String filter) {
+    setState(() {
+      _selectedFilter = filter;
+      _updateFilteredEvents();
+    });
+  }
+
+  void _updateFilteredEvents() {
+    if (_selectedFilter == 'Semua') {
+      _filteredEvents = _allEvents;
+    } else {
+      _filteredEvents =
+          _allEvents
+              .where(
+                (event) =>
+                    event.category.toLowerCase() ==
+                    _selectedFilter.toLowerCase(),
+              )
+              .toList();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16.0),
+        // Use a Column to separate static content from the scrollable list
+        child: Column(
           children: [
-            _buildHeader(),
-            const SizedBox(height: 24),
-            _buildWeeklyActivityCard(context),
-            const SizedBox(height: 16),
-            _buildActionButtons(context),
-            const SizedBox(height: 24),
-            _buildCalendarSection(),
+            // --- START: NON-SCROLLABLE CONTENT ---
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 24),
+                  _buildWeeklyActivityCard(context),
+                  const SizedBox(height: 16),
+                  _buildActionButtons(context),
+                  const SizedBox(height: 24),
+                  _buildCalendarHeader(),
+                ],
+              ),
+            ),
+            // --- END: NON-SCROLLABLE CONTENT ---
+
+            // --- START: SCROLLABLE LIST ---
+            Expanded(
+              child:
+                  _filteredEvents.isEmpty
+                      ? _buildEmptyCalendarView()
+                      : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        itemCount: _filteredEvents.length,
+                        itemBuilder: (context, index) {
+                          final event = _filteredEvents[index];
+                          final bool showDate =
+                              index == 0 ||
+                              _filteredEvents[index - 1].day != event.day;
+                          return _buildEventTile(event, showDate);
+                        },
+                      ),
+            ),
+            // --- END: SCROLLABLE LIST ---
           ],
         ),
       ),
@@ -101,7 +168,7 @@ class HomeScreen extends StatelessWidget {
                 color: Colors.blue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.camera_alt, color: Colors.blue),
+              child: const Icon(Icons.library_books, color: Colors.blue),
             ),
             const SizedBox(width: 16),
             const Expanded(
@@ -114,7 +181,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    '9 dari 40 jam aktivitas',
+                    '13 dari 40 jam aktivitas',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ],
@@ -166,8 +233,9 @@ class HomeScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.1),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.withOpacity(0.2)),
         ),
         child: Row(
           children: [
@@ -175,35 +243,20 @@ class HomeScreen extends StatelessWidget {
               child: Text(
                 label,
                 style: const TextStyle(
-                  color: Colors.blue,
-                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF333333),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-            Icon(icon, color: Colors.blue),
+            Icon(icon, color: const Color(0xFF333333)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCalendarSection() {
-    final events = [
-      CalendarEvent(
-        '28',
-        'Jul',
-        'Yovita Liana Salsabila',
-        'Cuti Melahirkan',
-        const Color(0xFF2196F3),
-      ),
-      CalendarEvent(
-        '28',
-        'Jul',
-        'Kevin Edbert J',
-        'Cuti Tahunan (Siang)',
-        const Color(0xFF2196F3),
-      ),
-    ];
+  Widget _buildCalendarHeader() {
+    const filters = ['Semua', 'Cuti', 'Kerja Khusus', 'Libur', 'Ulang Tahun'];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -218,84 +271,359 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
+        // Filter Chips
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children:
-                ['Semua', 'Cuti', 'Kerja Khusus', 'Libur', 'Ulang Tahun']
-                    .map(
-                      (label) => Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: Chip(
-                          label: Text(label),
-                          backgroundColor:
-                              label == 'Semua'
-                                  ? Colors.blue.withOpacity(0.2)
-                                  : Colors.white,
-                          labelStyle: TextStyle(
-                            color: label == 'Semua' ? Colors.blue : Colors.grey,
-                          ),
-                          side: const BorderSide(color: Colors.grey),
-                        ),
+            children: [
+              // Divisi Dropdown (static for now)
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Chip(
+                  avatar: const Icon(Icons.arrow_drop_down, size: 18),
+                  label: const Text('Divisi'),
+                  backgroundColor: Colors.white,
+                  labelStyle: const TextStyle(color: Colors.grey),
+                  side: BorderSide(color: Colors.grey.shade300),
+                ),
+              ),
+              ...filters.map((label) {
+                final isSelected = _selectedFilter == label;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: GestureDetector(
+                    onTap: () => _updateFilter(label),
+                    child: Chip(
+                      label: Text(label),
+                      backgroundColor:
+                          isSelected ? const Color(0xFFFEE2E1) : Colors.white,
+                      labelStyle: TextStyle(
+                        color:
+                            isSelected ? const Color(0xFFD32F2F) : Colors.grey,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
-                    )
-                    .toList(),
+                      side: BorderSide(
+                        color:
+                            isSelected
+                                ? const Color(0xFFD32F2F)
+                                : Colors.grey.shade300,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ],
           ),
         ),
         const SizedBox(height: 16),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: events.length,
-          itemBuilder: (context, index) => _buildEventTile(events[index]),
-        ),
       ],
     );
   }
 
-  Widget _buildEventTile(CalendarEvent event) {
+  Widget _buildEventTile(CalendarEvent event, bool showDate) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
+      margin: const EdgeInsets.only(bottom: 2),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Date part, shown only for the first item of the day
           SizedBox(
             width: 50,
-            child: Column(
-              children: [
-                Text(
-                  event.day,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(event.month, style: const TextStyle(color: Colors.grey)),
-              ],
-            ),
+            child:
+                showDate
+                    ? Column(
+                      children: [
+                        Text(
+                          event.day,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          event.month,
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    )
+                    : null,
           ),
           const SizedBox(width: 8),
-          Container(width: 4, height: 40, color: event.color),
-          const SizedBox(width: 12),
+          // Event details card
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  event.name,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text(event.type, style: const TextStyle(color: Colors.grey)),
-              ],
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border(left: BorderSide(color: event.color, width: 4)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          event.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          event.type,
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Colors.grey,
+                  ),
+                ],
+              ),
             ),
           ),
-          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
         ],
       ),
     );
+  }
+
+  Widget _buildEmptyCalendarView() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.business, size: 32, color: Colors.grey.shade500),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Belum Ada Data Terkini',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Nantikan update informasi terbaru disini atau coba gunakan filter lainnya.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper to get all calendar event data
+  List<CalendarEvent> _getCalendarEvents() {
+    const blue = Color(0xFF2196F3);
+    const orange = Color(0xFFFFA726);
+
+    return [
+      // July 28
+      CalendarEvent(
+        '28',
+        'Jul',
+        'Yovita Liana Salsabila',
+        'Cuti Melahirkan',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent(
+        '28',
+        'Jul',
+        'Kevin Edbert J',
+        'Cuti Tahunan (Siang)',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent('28', 'Jul', 'Lendi Larici', 'Cuti Tahunan', blue, 'Cuti'),
+      CalendarEvent(
+        '28',
+        'Jul',
+        'David Krisna Saputra',
+        'Cuti Tahunan',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent('28', 'Jul', 'Toni Kustiana', 'Cuti Tahunan', blue, 'Cuti'),
+      CalendarEvent('28', 'Jul', 'Ilham Ramli', 'Cuti Tahunan', blue, 'Cuti'),
+      CalendarEvent(
+        '28',
+        'Jul',
+        'Fitra Fadhilla',
+        'Cuti Tahunan',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent(
+        '28',
+        'Jul',
+        'Emira Fathurahmi',
+        'Cuti Menikah',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent(
+        '28',
+        'Jul',
+        'Michael Octavianus Lumowa',
+        'Cuti Progresif 2',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent(
+        '28',
+        'Jul',
+        'Naura Fadilah R.',
+        'Cuti Tahunan',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent(
+        '28',
+        'Jul',
+        'Fadhel Ijlal Falah',
+        'Cuti Tahunan',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent(
+        '28',
+        'Jul',
+        'Saesar Yustiawan',
+        'Cuti Tahunan',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent(
+        '28',
+        'Jul',
+        'Malik Chaudhary Nur Hadhiat Ahmad',
+        'Cuti Tahunan',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent(
+        '28',
+        'Jul',
+        'Felisya Alaudina',
+        'Cuti Tahunan',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent(
+        '28',
+        'Jul',
+        'Athiya Mutiara Denasfi',
+        'Cuti Tahunan',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent('28', 'Jul', 'Michelle', 'Cuti Tahunan', blue, 'Cuti'),
+      CalendarEvent(
+        '28',
+        'Jul',
+        'Valerie Wiradjaja',
+        'Perdin Dalam Kota',
+        orange,
+        'Kerja Khusus',
+      ),
+
+      // July 29
+      CalendarEvent(
+        '29',
+        'Jul',
+        'Valerie Wiradjaja',
+        'Perdin Dalam Kota',
+        orange,
+        'Kerja Khusus',
+      ),
+      CalendarEvent(
+        '29',
+        'Jul',
+        'Felisya Alaudina',
+        'Izin Khusus',
+        orange,
+        'Kerja Khusus',
+      ),
+      CalendarEvent(
+        '29',
+        'Jul',
+        'Yovita Liana Salsabila',
+        'Cuti Melahirkan',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent(
+        '29',
+        'Jul',
+        'Kevin Edbert J',
+        'Cuti Tahunan',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent(
+        '29',
+        'Jul',
+        'Fitra Fadhilla',
+        'Cuti Tahunan',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent(
+        '29',
+        'Jul',
+        'Emira Fathurahmi',
+        'Cuti Menikah',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent(
+        '29',
+        'Jul',
+        'Naura Fadilah R.',
+        'Cuti Tahunan',
+        blue,
+        'Cuti',
+      ),
+      CalendarEvent(
+        '29',
+        'Jul',
+        'Athiya Mutiara Denasfi',
+        'Cuti Tahunan',
+        blue,
+        'Cuti',
+      ),
+
+      // July 30
+      CalendarEvent(
+        '30',
+        'Jul',
+        'Valerie Wiradjaja',
+        'Perdin Dalam Kota',
+        orange,
+        'Kerja Khusus',
+      ),
+
+      // July 31
+      CalendarEvent(
+        '31',
+        'Jul',
+        'Valerie Wiradjaja',
+        'Perdin Dalam Kota',
+        orange,
+        'Kerja Khusus',
+      ),
+    ];
   }
 }
