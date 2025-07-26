@@ -1,0 +1,46 @@
+{
+  "projectStructure": {
+    "formatVersion": "0.3.3",
+    "isPublishedAsRoot": "true",
+    "variants": [
+      {
+        "name": "debugApiElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "debugRuntimeElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "releaseApiElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "releaseRuntimeElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      }
+    ],
+    "sourceSets": [
+      {
+        "name": "commonMain",
+        "dependsOn": [],
+        "moduleDependency": [
+          "androidx.compose.animation:animation-core",
+          "androidx.compose.foundation:foundation-layout",
+          "androidx.compose.runtime:runtime",
+          "androidx.compose.ui:ui",
+          "androidx.compose.ui:ui-geometry"
+        ],
+        "binaryLayout": "klib"
+      }
+    ]
+  }
+}
