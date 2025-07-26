@@ -1,5 +1,4 @@
 import 'package:desklab/domain/models/employee.dart';
-import 'package:desklab/presentation/screen/employee/employee_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
