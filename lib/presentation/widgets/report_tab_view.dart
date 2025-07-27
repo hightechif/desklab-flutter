@@ -1,6 +1,7 @@
 import 'package:desklab/domain/models/activity.dart';
 import 'package:flutter/material.dart';
 
+// --- ReportTabView ---
 class ReportTabView extends StatelessWidget {
   final bool isWeekly;
   const ReportTabView({super.key, required this.isWeekly});
@@ -11,16 +12,20 @@ class ReportTabView extends StatelessWidget {
     final maxHours = isWeekly ? 40 : 184;
     final activities = [
       Activity(
+        id: 'dummy-1',
         project: 'EDTS-ADMIN-ADMIN-LEAVE',
         activityName: 'Annual Leave',
         hours: 4,
         color: Colors.purple,
+        activityDate: DateTime.now(),
       ),
       Activity(
+        id: 'dummy-2',
         project: 'EDTS-ADMIN-ADMIN-TRAINING',
         activityName: 'Sharing Session',
         hours: 5,
         color: Colors.brown,
+        activityDate: DateTime.now(),
       ),
     ];
     return Column(

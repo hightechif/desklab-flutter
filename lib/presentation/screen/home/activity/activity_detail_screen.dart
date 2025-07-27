@@ -151,7 +151,11 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
             final result = await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const AddActivityScreen(),
+                builder:
+                    (context) => AddActivityScreen(
+                      // Pass the selected date to the AddActivityScreen
+                      selectedDate: _selectedDate,
+                    ),
               ),
             );
             if (result != null && result is Activity) {

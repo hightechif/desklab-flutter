@@ -1,11 +1,12 @@
 import 'dart:async';
-
+import 'package:intl/intl.dart';
 import 'package:desklab/domain/models/activity.dart';
 import 'package:flutter/material.dart';
 
 class AddActivityScreen extends StatefulWidget {
   final Activity? activity;
-  const AddActivityScreen({super.key, this.activity});
+  final DateTime? selectedDate; // Accept the selected date
+  const AddActivityScreen({super.key, this.activity, this.selectedDate});
   @override
   State<AddActivityScreen> createState() => _AddActivityScreenState();
 }
@@ -16,6 +17,8 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       _activityController,
       _hoursController,
       _notesController;
+  late DateTime _dateForActivity;
+
   bool get isEditing => widget.activity != null;
 
   @override
@@ -29,6 +32,9 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       text: widget.activity?.hours.toString(),
     );
     _notesController = TextEditingController(text: widget.activity?.notes);
+    // Use the date from the existing activity if editing, or the passed selectedDate, or today as a fallback.
+    _dateForActivity =
+        widget.activity?.activityDate ?? widget.selectedDate ?? DateTime.now();
   }
 
   @override
@@ -65,15 +71,17 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       _showLoadingDialog();
       Timer(const Duration(seconds: 1), () {
         final newActivity = Activity(
+          id: widget.activity?.id, // Preserve id if editing
           project: _projectController.text,
           activityName: _activityController.text,
           hours: int.parse(_hoursController.text),
           notes: _notesController.text,
+          activityDate: _dateForActivity, // Use the determined date
           color:
               isEditing
                   ? widget.activity!.color
-                  : (_projectController.text.contains("DEV")
-                      ? const Color(0xFF4A6572)
+                  : (_projectController.text.contains("KLIK")
+                      ? const Color(0xFF546E7A)
                       : Colors.brown),
         );
         Navigator.of(context).pop();
@@ -104,6 +112,8 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
         'Sharing Session',
         'Research / Planning',
         'Bugs Fixing',
+        'Enhancement',
+        'Weekly Meeting',
       ],
     );
     if (result != null) _activityController.text = result;
@@ -141,7 +151,10 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
           children: [
             _buildTextField(
               label: 'Tanggal',
-              initialValue: '21 Juli 2025',
+              initialValue: DateFormat(
+                'd MMMM yyyy',
+                'id_ID',
+              ).format(_dateForActivity),
               readOnly: true,
               icon: Icons.calendar_today,
             ),
