@@ -730,9 +730,51 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
+  Widget _buildCopyOptionTile({
+    required String title,
+    required String value,
+    required String? groupValue,
+    required ValueChanged<String?> onChanged,
+  }) {
+    final bool isSelected = value == groupValue;
+    return GestureDetector(
+      onTap: () => onChanged(value),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? Colors.blue : Colors.grey.shade300,
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isSelected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              color: isSelected ? Colors.blue : Colors.grey.shade400,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? Colors.black : Colors.grey.shade600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ADDED: Method to show the dialog for copying activities.
   void _showCopyActivityDialog() {
-    String? copyOption = 'last_week'; // Default selection
+    String? copyOption = 'last_workday'; // Default to 'Aktivitas terakhir'
 
     showDialog(
       context: context,
@@ -740,15 +782,21 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
+              backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
               ),
-              title: const Text('Duplikat dari'),
+              title: const Center(
+                child: Text(
+                  'Duplikat dari',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  RadioListTile<String>(
-                    title: const Text('Aktivitas terakhir'),
+                  _buildCopyOptionTile(
+                    title: 'Aktivitas terakhir',
                     value: 'last_workday',
                     groupValue: copyOption,
                     onChanged: (value) {
@@ -757,8 +805,9 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                       });
                     },
                   ),
-                  RadioListTile<String>(
-                    title: const Text('Aktivitas minggu lalu'),
+                  const SizedBox(height: 8),
+                  _buildCopyOptionTile(
+                    title: 'Aktivitas minggu lalu',
                     value: 'last_week',
                     groupValue: copyOption,
                     onChanged: (value) {
@@ -770,24 +819,52 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                 ],
               ),
               actions: <Widget>[
-                TextButton(
-                  child: const Text('Batal'),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Pilih'),
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Close the dialog first
-                    if (copyOption != null) {
-                      _performCopyActivity(copyOption!);
-                    }
-                  },
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          side: BorderSide.none, // Removes the outline
+                        ),
+                        child: const Text(
+                          'Batal',
+                          style: TextStyle(color: Colors.black),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Text('Pilih'),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          if (copyOption != null) {
+                            _performCopyActivity(copyOption!);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ],
+              actionsAlignment: MainAxisAlignment.center,
+              actionsPadding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 24),
             );
           },
         );
@@ -804,7 +881,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
       final sourceDate = _selectedDate.subtract(const Duration(days: 7));
       success = provider.copyActivities(from: sourceDate, to: _selectedDate);
       if (success) {
-        _showSuccessSnackbar('Aktivitas dari minggu lalu berhasil ditiru');
+        _showSuccessSnackbar('Aktivitas dari minggu lalu berhasil diduplikasi');
       } else {
         _showErrorSnackbar('Tidak ada aktivitas ditemukan di minggu lalu');
       }
@@ -814,7 +891,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
         success = provider.copyActivities(from: sourceDate, to: _selectedDate);
         if (success) {
           _showSuccessSnackbar(
-            'Aktivitas dari hari kerja terakhir berhasil ditiru',
+            'Aktivitas dari hari kerja terakhir berhasil diduplikasi',
           );
         }
       } else {
