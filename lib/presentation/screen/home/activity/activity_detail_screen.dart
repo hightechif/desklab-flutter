@@ -48,6 +48,22 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     });
   }
 
+  // ADDED: Method to navigate to the previous week.
+  void _previousWeek() {
+    setState(() {
+      _selectedDate = _selectedDate.subtract(const Duration(days: 7));
+      _displayMonth = DateTime(_selectedDate.year, _selectedDate.month);
+    });
+  }
+
+  // ADDED: Method to navigate to the next week.
+  void _nextWeek() {
+    setState(() {
+      _selectedDate = _selectedDate.add(const Duration(days: 7));
+      _displayMonth = DateTime(_selectedDate.year, _selectedDate.month);
+    });
+  }
+
   int getWeekOfYear(DateTime date) {
     final dayOfYear = int.parse(DateFormat("D").format(date));
     return ((dayOfYear - date.weekday + 10) / 7).floor();
@@ -138,7 +154,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
               child: ElevatedButton.icon(
                 onPressed: _showCopyActivityDialog,
                 icon: const Icon(Icons.copy_all_outlined),
-                label: const Text('Tiru Aktivitas'),
+                label: const Text('Duplikat'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.blue,
@@ -229,9 +245,25 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
               ],
             )
           else
-            Text(
-              'Pekan ${getWeekOfYear(_selectedDate)}',
-              style: const TextStyle(color: Colors.grey),
+            // CHANGED: Replaced static text with week navigation controls.
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left),
+                  onPressed: _previousWeek,
+                ),
+                Text(
+                  'Pekan ${getWeekOfYear(_selectedDate)}',
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed: _nextWeek,
+                ),
+              ],
             ),
         ],
       ),
@@ -711,13 +743,13 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              title: const Text('Tiru Aktivitas'),
+              title: const Text('Duplikat dari'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   RadioListTile<String>(
-                    title: const Text('Tiru minggu lalu'),
-                    value: 'last_week',
+                    title: const Text('Aktivitas terakhir'),
+                    value: 'last_workday',
                     groupValue: copyOption,
                     onChanged: (value) {
                       setState(() {
@@ -726,8 +758,8 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                     },
                   ),
                   RadioListTile<String>(
-                    title: const Text('Tiru hari kerja terakhir'),
-                    value: 'last_workday',
+                    title: const Text('Aktivitas minggu lalu'),
+                    value: 'last_week',
                     groupValue: copyOption,
                     onChanged: (value) {
                       setState(() {
@@ -747,7 +779,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Tiru'),
+                  child: const Text('Pilih'),
                   onPressed: () {
                     Navigator.of(context).pop(); // Close the dialog first
                     if (copyOption != null) {
