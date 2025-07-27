@@ -1,3 +1,6 @@
+import 'package:desklab/domain/models/calendar_event.dart';
+import 'package:flutter/material.dart';
+
 class CalendarEventRepository {
   List<CalendarEvent> getEvents() {
     const blue = Color(0xFF2196F3);
