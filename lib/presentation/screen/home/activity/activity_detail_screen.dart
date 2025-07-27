@@ -145,7 +145,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       // CHANGED: Replaced single FAB with a Row of two buttons for the new feature.
       floatingActionButton: Padding(
-        padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 80.0),
+        padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 32.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
