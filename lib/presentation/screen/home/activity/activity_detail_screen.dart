@@ -246,9 +246,17 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
             day.month == _selectedDate.month &&
             day.day == _selectedDate.day;
 
-        // Check if there are activities for this day of the week (0-6)
-        final hasActivity =
-            activityProvider.getActivitiesForDay(index).isNotEmpty;
+        // Calculate total hours and determine dot color for the day
+        Color? dotColor;
+        // Only calculate for weekdays (index 0-4 for Mon-Fri)
+        if (index < 5) {
+          final activities = activityProvider.getActivitiesForDay(index);
+          final totalHours = activities.fold<int>(
+            0,
+            (sum, item) => sum + item.hours,
+          );
+          dotColor = totalHours >= 8 ? Colors.green : Colors.red;
+        }
 
         return _buildDay(
           dayNames[index],
@@ -256,7 +264,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
           isSelected: isSelected,
           isWeekend: index > 4,
           onTap: () => _selectDate(day),
-          hasActivity: hasActivity,
+          dotColor: dotColor,
         );
       }),
     );
@@ -269,7 +277,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     required bool isSelected,
     bool isWeekend = false,
     required VoidCallback onTap,
-    bool hasActivity = false,
+    Color? dotColor,
   }) {
     return Expanded(
       child: GestureDetector(
@@ -305,13 +313,14 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                 ),
               ),
               const SizedBox(height: 4),
-              // Red dot indicator
-              if (hasActivity)
+              // Dot indicator with color logic
+              if (dotColor != null)
                 Container(
                   width: 5,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: isSelected ? Colors.white : Colors.red,
+                    // If the day is selected, the dot should be white for contrast
+                    color: isSelected ? Colors.white : dotColor,
                     shape: BoxShape.circle,
                   ),
                 )
