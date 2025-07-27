@@ -6,7 +6,7 @@ class CalendarEvent {
   final String name;
   final String type;
   final Color color;
-  final String category; // Added for filtering
+  final String category;
 
   CalendarEvent(
     this.day,

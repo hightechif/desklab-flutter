@@ -1,7 +1,6 @@
 import 'package:desklab/domain/models/activity.dart';
 import 'package:flutter/material.dart';
 
-// --- ReportTabView ---
 class ReportTabView extends StatelessWidget {
   final bool isWeekly;
   const ReportTabView({super.key, required this.isWeekly});
@@ -34,7 +33,6 @@ class ReportTabView extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // Dropdowns for date range would go here
               ...activities.map(
                 (activity) => Card(
                   margin: const EdgeInsets.only(bottom: 12),

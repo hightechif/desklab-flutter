@@ -86,7 +86,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     final int weeklyHours = activityProvider.getTotalHoursForWeek(
       _selectedDate,
     );
-    // ADDED: Check if the selected day is a weekend.
+
     final bool isWeekend =
         _selectedDate.weekday == DateTime.saturday ||
         _selectedDate.weekday == DateTime.sunday;
@@ -152,7 +152,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                // CHANGED: Disable button on weekends.
                 onPressed: isWeekend ? null : _showCopyActivityDialog,
                 icon: const Icon(Icons.copy_all_outlined),
                 label: const Text('Duplikat'),
@@ -171,7 +170,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
             const SizedBox(width: 16),
             Expanded(
               child: ElevatedButton.icon(
-                // CHANGED: Disable button on weekends.
                 onPressed:
                     isWeekend
                         ? null
@@ -738,7 +736,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
-  // ADDED: A helper widget for the custom radio button style.
   Widget _buildCopyOptionTile({
     required String title,
     required String value,
@@ -781,9 +778,8 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
-  // CHANGED: The entire dialog is redesigned to match the provided image.
   void _showCopyActivityDialog() {
-    String? copyOption = 'last_workday'; // Default to 'Aktivitas terakhir'
+    String? copyOption = 'last_workday';
 
     showDialog(
       context: context,
@@ -838,7 +834,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          side: BorderSide.none, // Removes the outline
+                          side: BorderSide.none,
                         ),
                         child: const Text(
                           'Batal',
@@ -881,7 +877,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
-  // CHANGED: Logic updated to use findLastWorkday.
   void _performCopyActivity(String copyOption) {
     final provider = Provider.of<ActivityProvider>(context, listen: false);
     bool success;

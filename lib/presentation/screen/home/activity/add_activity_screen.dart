@@ -70,8 +70,6 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       _showLoadingDialog();
       Timer(const Duration(seconds: 1), () {
         final newActivity = Activity(
-          // CHANGED: Ensure a unique ID is always present. Use the existing one if editing,
-          // or create a new one based on the timestamp for new activities.
           id: widget.activity?.id ?? DateTime.now().toIso8601String(),
           project: _projectController.text,
           activityName: _activityController.text,
