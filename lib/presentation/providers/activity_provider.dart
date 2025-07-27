@@ -80,32 +80,25 @@ class ActivityProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // ADDED: Method to add a list of activities and notify listeners once.
   void addActivities(List<Activity> activities) {
     _activities.addAll(activities);
     notifyListeners();
   }
 
-  // ADDED: Method to find the last workday with any recorded activity.
-  DateTime? findLastWorkdayWithActivity(DateTime fromDate) {
+  DateTime findLastWorkday(DateTime fromDate) {
     var currentDate = DateTime.utc(
       fromDate.year,
       fromDate.month,
       fromDate.day,
     ).subtract(const Duration(days: 1));
-    for (int i = 0; i < 90; i++) {
-      // Search back up to 90 days
+    while (true) {
       if (currentDate.weekday >= 1 && currentDate.weekday <= 5) {
-        if (getActivitiesForDate(currentDate).isNotEmpty) {
-          return currentDate;
-        }
+        return currentDate;
       }
       currentDate = currentDate.subtract(const Duration(days: 1));
     }
-    return null;
   }
 
-  // ADDED: Method to handle the core logic of copying activities.
   bool copyActivities({required DateTime from, required DateTime to}) {
     final activitiesToCopy = getActivitiesForDate(from);
 
@@ -114,6 +107,9 @@ class ActivityProvider with ChangeNotifier {
     }
 
     final List<Activity> newActivities = [];
+    for (Activity act in getActivitiesForDate(to)) {
+      deleteActivity(act.id);
+    }
     for (final activity in activitiesToCopy) {
       newActivities.add(
         Activity(

@@ -881,35 +881,26 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
+  // CHANGED: Logic updated to use findLastWorkday.
   void _performCopyActivity(String copyOption) {
     final provider = Provider.of<ActivityProvider>(context, listen: false);
-    bool success = false;
+    bool success;
 
     if (copyOption == 'last_week') {
       final sourceDate = _selectedDate.subtract(const Duration(days: 7));
       success = provider.copyActivities(from: sourceDate, to: _selectedDate);
       if (success) {
-        _showSuccessSnackbar('Aktivitas dari minggu lalu berhasil diduplikasi');
+        _showSuccessSnackbar('Berhasil duplikat minggu lalu');
       } else {
         _showErrorSnackbar('Tidak ada aktivitas ditemukan di minggu lalu');
       }
     } else if (copyOption == 'last_workday') {
-      final sourceDate = provider.findLastWorkdayWithActivity(_selectedDate);
-      if (sourceDate != null) {
-        success = provider.copyActivities(from: sourceDate, to: _selectedDate);
-        if (success) {
-          _showSuccessSnackbar(
-            'Aktivitas dari hari kerja terakhir berhasil diduplikasi',
-          );
-        }
+      final sourceDate = provider.findLastWorkday(_selectedDate);
+      success = provider.copyActivities(from: sourceDate, to: _selectedDate);
+      if (success) {
+        _showSuccessSnackbar('Berhasil duplikat hari kerja terakhir');
       } else {
-        success = false;
-      }
-
-      if (!success) {
-        _showErrorSnackbar(
-          'Tidak ada aktivitas ditemukan di hari kerja terakhir',
-        );
+        _showErrorSnackbar('Aktivitas di hari kerja terakhir tidak ditemukan');
       }
     }
   }
