@@ -48,7 +48,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     });
   }
 
-  // ADDED: Method to navigate to the previous week.
   void _previousWeek() {
     setState(() {
       _selectedDate = _selectedDate.subtract(const Duration(days: 7));
@@ -56,7 +55,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     });
   }
 
-  // ADDED: Method to navigate to the next week.
   void _nextWeek() {
     setState(() {
       _selectedDate = _selectedDate.add(const Duration(days: 7));
@@ -88,6 +86,10 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     final int weeklyHours = activityProvider.getTotalHoursForWeek(
       _selectedDate,
     );
+    // ADDED: Check if the selected day is a weekend.
+    final bool isWeekend =
+        _selectedDate.weekday == DateTime.saturday ||
+        _selectedDate.weekday == DateTime.sunday;
 
     return Scaffold(
       appBar: AppBar(
@@ -143,21 +145,21 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      // CHANGED: Replaced single FAB with a Row of two buttons for the new feature.
       floatingActionButton: Padding(
         padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 32.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // ADDED: New button for copying activities.
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: _showCopyActivityDialog,
+                // CHANGED: Disable button on weekends.
+                onPressed: isWeekend ? null : _showCopyActivityDialog,
                 icon: const Icon(Icons.copy_all_outlined),
                 label: const Text('Duplikat'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.blue,
+                  disabledBackgroundColor: Colors.grey.shade200,
                   side: const BorderSide(color: Colors.blue),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
@@ -169,25 +171,33 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
             const SizedBox(width: 16),
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () async {
-                  final result = await Navigator.push<Activity?>(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) =>
-                              AddActivityScreen(selectedDate: _selectedDate),
-                    ),
-                  );
-                  if (result != null) {
-                    activityProvider.addActivity(result);
-                    _showSuccessSnackbar("Anda berhasil menambahkan aktivitas");
-                  }
-                },
+                // CHANGED: Disable button on weekends.
+                onPressed:
+                    isWeekend
+                        ? null
+                        : () async {
+                          final result = await Navigator.push<Activity?>(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => AddActivityScreen(
+                                    selectedDate: _selectedDate,
+                                  ),
+                            ),
+                          );
+                          if (result != null) {
+                            activityProvider.addActivity(result);
+                            _showSuccessSnackbar(
+                              "Anda berhasil menambahkan aktivitas",
+                            );
+                          }
+                        },
                 icon: const Icon(Icons.add),
                 label: const Text('Tambah Aktivitas'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
+                  disabledBackgroundColor: Colors.blue.shade200,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -245,7 +255,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
               ],
             )
           else
-            // CHANGED: Replaced static text with week navigation controls.
             Row(
               children: [
                 IconButton(
@@ -675,7 +684,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
-  // ADDED: Snackbar for showing errors.
   void _showErrorSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -730,6 +738,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
+  // ADDED: A helper widget for the custom radio button style.
   Widget _buildCopyOptionTile({
     required String title,
     required String value,
@@ -772,7 +781,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
-  // ADDED: Method to show the dialog for copying activities.
+  // CHANGED: The entire dialog is redesigned to match the provided image.
   void _showCopyActivityDialog() {
     String? copyOption = 'last_workday'; // Default to 'Aktivitas terakhir'
 
@@ -872,7 +881,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
-  // ADDED: Method to handle the logic of copying activities.
   void _performCopyActivity(String copyOption) {
     final provider = Provider.of<ActivityProvider>(context, listen: false);
     bool success = false;
