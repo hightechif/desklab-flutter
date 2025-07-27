@@ -3,137 +3,86 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 
 class ActivityRepository {
-  // CHANGED: The method now returns a flat List<Activity> instead of a Map.
   List<Activity> getInitialActivities() {
-    const apiResponse = '''
-    [
-      {
-        "projectId": 422,
-        "clientName": "KLIK",
-        "clientDivisionName": "CORP",
-        "clientProjectName": "KLIK",
-        "clientSubProjectName": "DEVELOPMENT",
-        "activityId": 68,
-        "activityName": "Enhancement",
-        "hexCode": "#546E7A",
-        "activities": [
-          {
-            "id": "ce2c71ef-6468-43d4-9f35-8280845b8c2e",
-            "projectId": 422,
-            "activityId": 68,
-            "activityDate": "2025-07-15",
-            "workHour": 4
-          },
-          {
-            "id": "dcb36409-79cd-41e9-86f7-c4e0a0d44e01",
-            "projectId": 422,
-            "activityId": 68,
-            "activityDate": "2025-07-18",
-            "workHour": 2
-          }
-        ]
-      },
-      {
-        "projectId": 556,
-        "clientName": "EDTS",
-        "clientDivisionName": "ADMIN",
-        "clientProjectName": "ADMIN",
-        "clientSubProjectName": "ROUTINE",
-        "activityId": 122,
-        "activityName": "Weekly Meeting",
-        "hexCode": "#00BCD4",
-        "activities": [
-          {
-            "id": "2fc94eb0-6a77-4658-88ee-a59333c53036",
-            "projectId": 556,
-            "activityId": 122,
-            "activityDate": "2025-07-18",
-            "workHour": 1
-          }
-        ]
-      },
-      {
-        "projectId": 422,
-        "clientName": "KLIK",
-        "clientDivisionName": "CORP",
-        "clientProjectName": "KLIK",
-        "clientSubProjectName": "DEVELOPMENT",
-        "activityId": 65,
-        "activityName": "Bugs Fixing",
-        "hexCode": "#546E7A",
-        "activities": [
-          {
-            "id": "fe2f79a6-29ab-48c0-b7d9-88a0f7574297",
-            "projectId": 422,
-            "activityId": 65,
-            "activityDate": "2025-07-18",
-            "workHour": 2
-          }
-        ]
-      },
-      {
-        "projectId": 422,
-        "clientName": "KLIK",
-        "clientDivisionName": "CORP",
-        "clientProjectName": "KLIK",
-        "clientSubProjectName": "DEVELOPMENT",
-        "activityId": 67,
-        "activityName": "Development",
-        "hexCode": "#546E7A",
-        "activities": [
-          {
-            "id": "46d3cdeb-9a46-49b9-89e0-acda704456ea",
-            "projectId": 422,
-            "activityId": 67,
-            "activityDate": "2025-07-15",
-            "workHour": 4
-          },
-          {
-            "id": "b6950889-f41e-47bd-9a34-55eec65cc84b",
-            "projectId": 422,
-            "activityId": 67,
-            "activityDate": "2025-07-18",
-            "workHour": 4
-          }
-        ]
-      }
-    ]
-    ''';
-
-    final List<dynamic> parsedJson = jsonDecode(apiResponse);
     final List<Activity> allActivities = [];
 
-    Color hexToColor(String code) {
-      try {
-        return Color(int.parse(code.substring(1, 7), radix: 16) + 0xFF000000);
-      } catch (e) {
-        return Colors.grey;
+    // Define some dummy project/activity details for variety
+    final dummyProjects = [
+      {'name': 'KLIK-CORP-KLIK-DEVELOPMENT', 'color': const Color(0xFF546E7A)},
+      {'name': 'EDTS-ADMIN-ADMIN-TRAINING', 'color': const Color(0xFF00BCD4)},
+      {'name': 'GURIH-CORP-GURIHMART-DEV', 'color': Colors.brown},
+      {'name': 'EDTS-ADMIN-ADMIN-LEAVE', 'color': Colors.purple},
+    ];
+    final dummyActivityNames = [
+      'Development',
+      'Enhancement',
+      'Bugs Fixing',
+      'Weekly Meeting',
+      'Sharing Session',
+      'Research / Planning',
+    ];
+
+    // Helper to add a full 8-hour day of activities for a given date.
+    void addFullDayOfActivities(DateTime date) {
+      // Use the day of the month to add some variety to the created activities.
+      final project1 = dummyProjects[date.day % dummyProjects.length];
+      final project2 = dummyProjects[(date.day + 1) % dummyProjects.length];
+      final activityName1 =
+          dummyActivityNames[date.day % dummyActivityNames.length];
+      final activityName2 =
+          dummyActivityNames[(date.day + 1) % dummyActivityNames.length];
+
+      allActivities.add(
+        Activity(
+          id: '${date.toIso8601String()}-1',
+          project: project1['name'] as String,
+          activityName: activityName1,
+          hours: 4, // First 4 hours
+          activityDate: date,
+          color: project1['color'] as Color,
+        ),
+      );
+      allActivities.add(
+        Activity(
+          id: '${date.toIso8601String()}-2',
+          project: project2['name'] as String,
+          activityName: activityName2,
+          hours: 4, // Second 4 hours
+          activityDate: date,
+          color: project2['color'] as Color,
+        ),
+      );
+    }
+
+    // --- Generate June 2025 Data ---
+    // Fill every weekday in June with 8 hours of activity.
+    final daysInJune = DateTime(2025, 7, 0).day; // Get number of days in June
+    for (int i = 1; i <= daysInJune; i++) {
+      final date = DateTime(2025, 6, i);
+      // Check if it's a weekday (Monday=1, Friday=5)
+      if (date.weekday >= 1 && date.weekday <= 5) {
+        addFullDayOfActivities(date);
       }
     }
 
-    for (var projectActivityJson in parsedJson) {
-      final String project =
-          '${projectActivityJson['clientName']}-${projectActivityJson['clientDivisionName']}-${projectActivityJson['clientProjectName']}-${projectActivityJson['clientSubProjectName']}';
-      final String activityName = projectActivityJson['activityName'];
-      final Color color = hexToColor(projectActivityJson['hexCode']);
+    // --- Generate July 2025 Data ---
+    // The current date is assumed to be July 27, 2025.
+    // The current week is Mon, Jul 21 to Sun, Jul 27.
+    // We need to fill data for all weekdays *before* the current week.
+    final startOfCurrentWeek = DateTime(2025, 7, 21);
+    final daysInJuly = DateTime(2025, 8, 0).day;
 
-      for (var activityLogJson in projectActivityJson['activities']) {
-        final DateTime activityDate = DateTime.parse(
-          activityLogJson['activityDate'],
-        );
-
-        final activity = Activity(
-          id: activityLogJson['id'],
-          project: project,
-          activityName: activityName,
-          hours: activityLogJson['workHour'],
-          activityDate: activityDate,
-          color: color,
-          notes: null,
-        );
-        allActivities.add(activity);
+    for (int i = 1; i <= daysInJuly; i++) {
+      final date = DateTime(2025, 7, i);
+      // Only add data for dates before the start of the current week.
+      if (date.isBefore(startOfCurrentWeek)) {
+        // And only for weekdays.
+        if (date.weekday >= 1 && date.weekday <= 5) {
+          addFullDayOfActivities(date);
+        }
       }
     }
+
     return allActivities;
   }
 }
