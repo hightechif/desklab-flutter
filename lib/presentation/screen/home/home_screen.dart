@@ -1,3 +1,4 @@
+import 'package:desklab/data/repositories/calendar_event_repository';
 import 'package:desklab/domain/models/calendar_event.dart';
 import 'package:desklab/presentation/providers/activity_provider.dart';
 import 'package:desklab/presentation/screen/home/leave/leave_screen.dart';
@@ -17,11 +18,12 @@ class _HomeScreenState extends State<HomeScreen> {
   String _selectedFilter = 'Semua';
   late List<CalendarEvent> _allEvents;
   late List<CalendarEvent> _filteredEvents;
+  final CalendarEventRepository _eventRepository = CalendarEventRepository();
 
   @override
   void initState() {
     super.initState();
-    _allEvents = _getCalendarEvents();
+    _allEvents = _eventRepository.getEvents();
     _updateFilteredEvents();
   }
 
@@ -433,209 +435,5 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
-  }
-
-  // Helper to get all calendar event data
-  List<CalendarEvent> _getCalendarEvents() {
-    const blue = Color(0xFF2196F3);
-    const orange = Color(0xFFFFA726);
-
-    return [
-      // July 28
-      CalendarEvent(
-        '28',
-        'Jul',
-        'Yovita Liana Salsabila',
-        'Cuti Melahirkan',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent(
-        '28',
-        'Jul',
-        'Kevin Edbert J',
-        'Cuti Tahunan (Siang)',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent('28', 'Jul', 'Lendi Larici', 'Cuti Tahunan', blue, 'Cuti'),
-      CalendarEvent(
-        '28',
-        'Jul',
-        'David Krisna Saputra',
-        'Cuti Tahunan',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent('28', 'Jul', 'Toni Kustiana', 'Cuti Tahunan', blue, 'Cuti'),
-      CalendarEvent('28', 'Jul', 'Ilham Ramli', 'Cuti Tahunan', blue, 'Cuti'),
-      CalendarEvent(
-        '28',
-        'Jul',
-        'Fitra Fadhilla',
-        'Cuti Tahunan',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent(
-        '28',
-        'Jul',
-        'Emira Fathurahmi',
-        'Cuti Menikah',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent(
-        '28',
-        'Jul',
-        'Michael Octavianus Lumowa',
-        'Cuti Progresif 2',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent(
-        '28',
-        'Jul',
-        'Naura Fadilah R.',
-        'Cuti Tahunan',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent(
-        '28',
-        'Jul',
-        'Fadhel Ijlal Falah',
-        'Cuti Tahunan',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent(
-        '28',
-        'Jul',
-        'Saesar Yustiawan',
-        'Cuti Tahunan',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent(
-        '28',
-        'Jul',
-        'Malik Chaudhary Nur Hadhiat Ahmad',
-        'Cuti Tahunan',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent(
-        '28',
-        'Jul',
-        'Felisya Alaudina',
-        'Cuti Tahunan',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent(
-        '28',
-        'Jul',
-        'Athiya Mutiara Denasfi',
-        'Cuti Tahunan',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent('28', 'Jul', 'Michelle', 'Cuti Tahunan', blue, 'Cuti'),
-      CalendarEvent(
-        '28',
-        'Jul',
-        'Valerie Wiradjaja',
-        'Perdin Dalam Kota',
-        orange,
-        'Kerja Khusus',
-      ),
-
-      // July 29
-      CalendarEvent(
-        '29',
-        'Jul',
-        'Valerie Wiradjaja',
-        'Perdin Dalam Kota',
-        orange,
-        'Kerja Khusus',
-      ),
-      CalendarEvent(
-        '29',
-        'Jul',
-        'Felisya Alaudina',
-        'Izin Khusus',
-        orange,
-        'Kerja Khusus',
-      ),
-      CalendarEvent(
-        '29',
-        'Jul',
-        'Yovita Liana Salsabila',
-        'Cuti Melahirkan',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent(
-        '29',
-        'Jul',
-        'Kevin Edbert J',
-        'Cuti Tahunan',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent(
-        '29',
-        'Jul',
-        'Fitra Fadhilla',
-        'Cuti Tahunan',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent(
-        '29',
-        'Jul',
-        'Emira Fathurahmi',
-        'Cuti Menikah',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent(
-        '29',
-        'Jul',
-        'Naura Fadilah R.',
-        'Cuti Tahunan',
-        blue,
-        'Cuti',
-      ),
-      CalendarEvent(
-        '29',
-        'Jul',
-        'Athiya Mutiara Denasfi',
-        'Cuti Tahunan',
-        blue,
-        'Cuti',
-      ),
-
-      // July 30
-      CalendarEvent(
-        '30',
-        'Jul',
-        'Valerie Wiradjaja',
-        'Perdin Dalam Kota',
-        orange,
-        'Kerja Khusus',
-      ),
-
-      // July 31
-      CalendarEvent(
-        '31',
-        'Jul',
-        'Valerie Wiradjaja',
-        'Perdin Dalam Kota',
-        orange,
-        'Kerja Khusus',
-      ),
-    ];
   }
 }
