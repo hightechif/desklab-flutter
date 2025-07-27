@@ -52,8 +52,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final activityProvider = Provider.of<ActivityProvider>(context);
-    // CHANGED: Requirement 1 - The home screen card ALWAYS shows the total for the CURRENT week.
-    // Adding activities to other weeks will not affect this value.
     final int currentWeeklyHours = activityProvider.getTotalHoursForWeek(
       DateTime.now(),
     );
@@ -151,8 +149,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildWeeklyActivityCard(BuildContext context, int weeklyHours) {
     return GestureDetector(
-      // CHANGED: Requirement 2 - Clicking this opens the detail screen, which will
-      // now default to showing the current week's activities.
       onTap: () => context.push('/activity-details'),
       child: Container(
         padding: const EdgeInsets.all(16),

@@ -15,15 +15,12 @@ class ActivityDetailScreen extends StatefulWidget {
 
 class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
   bool _isCalendarOpen = false;
-  // CHANGED: Requirement 7 - State is now initialized to the current date,
-  // ensuring the screen always opens to "today" and the current week.
   late DateTime _selectedDate;
   late DateTime _displayMonth;
 
   @override
   void initState() {
     super.initState();
-    // ADDED: Initialize state to today's date every time the widget is created.
     _selectedDate = DateTime.now();
     _displayMonth = DateTime(_selectedDate.year, _selectedDate.month);
   }
@@ -68,7 +65,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
   Widget build(BuildContext context) {
     final activityProvider = Provider.of<ActivityProvider>(context);
 
-    // CHANGED: Fetch activities and hours using the new date-based provider methods.
     final currentActivities = activityProvider.getActivitiesForDate(
       _selectedDate,
     );
@@ -81,7 +77,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          // CHANGED: Use context.pop() for correct navigation with go_router.
           onPressed: () => context.pop(),
         ),
         title: const Text(
@@ -132,33 +127,59 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      // CHANGED: Replaced single FAB with a Row of two buttons for the new feature.
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 80.0),
-        child: ElevatedButton.icon(
-          onPressed: () async {
-            final result = await Navigator.push<Activity?>(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (context) => AddActivityScreen(selectedDate: _selectedDate),
+        padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 80.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // ADDED: New button for copying activities.
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _showCopyActivityDialog,
+                icon: const Icon(Icons.copy_all_outlined),
+                label: const Text('Tiru Aktivitas'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.blue,
+                  side: const BorderSide(color: Colors.blue),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
               ),
-            );
-            if (result != null) {
-              // CHANGED: Use the new provider method to add the activity object.
-              activityProvider.addActivity(result);
-              _showSuccessSnackbar("Anda berhasil menambahkan aktivitas");
-            }
-          },
-          icon: const Icon(Icons.add),
-          label: const Text('Tambah Aktivitas'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
             ),
-          ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  final result = await Navigator.push<Activity?>(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) =>
+                              AddActivityScreen(selectedDate: _selectedDate),
+                    ),
+                  );
+                  if (result != null) {
+                    activityProvider.addActivity(result);
+                    _showSuccessSnackbar("Anda berhasil menambahkan aktivitas");
+                  }
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Tambah Aktivitas'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       bottomSheet: _buildWeeklyProgress(weeklyHours),
@@ -234,16 +255,12 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
             day.month == _selectedDate.month &&
             day.day == _selectedDate.day;
 
-        // CHANGED: Requirement 6 - Updated dot indicator logic.
         Color? dotColor;
-        // The dot indicator color only exists on weekdays (Mon-Fri).
         if (day.weekday >= 1 && day.weekday <= 5) {
           final totalHours = activityProvider.getTotalHoursForDate(day);
-          // If total hours are 8 or more, the dot is green.
           if (totalHours >= 8) {
             dotColor = Colors.green;
           } else {
-            // If hours are less than 8 (including 0), the dot is red.
             dotColor = Colors.red;
           }
         }
@@ -453,11 +470,9 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
               ),
             );
             if (result != null && result is Activity) {
-              // CHANGED: Update using the activity's unique ID.
               activityProvider.updateActivity(activity.id, result);
               _showSuccessSnackbar("Anda berhasil mengubah aktivitas");
             } else if (result == 'delete') {
-              // CHANGED: Pass the ID to the delete confirmation.
               _showDeleteConfirmation(activity.id);
             }
           },
@@ -628,7 +643,25 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
-  // CHANGED: Method now accepts the activity's unique ID for deletion.
+  // ADDED: Snackbar for showing errors.
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(message),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
   void _showDeleteConfirmation(String activityId) {
     final activityProvider = Provider.of<ActivityProvider>(
       context,
@@ -663,5 +696,104 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
             ],
           ),
     );
+  }
+
+  // ADDED: Method to show the dialog for copying activities.
+  void _showCopyActivityDialog() {
+    String? copyOption = 'last_week'; // Default selection
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              title: const Text('Tiru Aktivitas'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RadioListTile<String>(
+                    title: const Text('Tiru minggu lalu'),
+                    value: 'last_week',
+                    groupValue: copyOption,
+                    onChanged: (value) {
+                      setState(() {
+                        copyOption = value;
+                      });
+                    },
+                  ),
+                  RadioListTile<String>(
+                    title: const Text('Tiru hari kerja terakhir'),
+                    value: 'last_workday',
+                    groupValue: copyOption,
+                    onChanged: (value) {
+                      setState(() {
+                        copyOption = value;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Batal'),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Tiru'),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog first
+                    if (copyOption != null) {
+                      _performCopyActivity(copyOption!);
+                    }
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ADDED: Method to handle the logic of copying activities.
+  void _performCopyActivity(String copyOption) {
+    final provider = Provider.of<ActivityProvider>(context, listen: false);
+    bool success = false;
+
+    if (copyOption == 'last_week') {
+      final sourceDate = _selectedDate.subtract(const Duration(days: 7));
+      success = provider.copyActivities(from: sourceDate, to: _selectedDate);
+      if (success) {
+        _showSuccessSnackbar('Aktivitas dari minggu lalu berhasil ditiru');
+      } else {
+        _showErrorSnackbar('Tidak ada aktivitas ditemukan di minggu lalu');
+      }
+    } else if (copyOption == 'last_workday') {
+      final sourceDate = provider.findLastWorkdayWithActivity(_selectedDate);
+      if (sourceDate != null) {
+        success = provider.copyActivities(from: sourceDate, to: _selectedDate);
+        if (success) {
+          _showSuccessSnackbar(
+            'Aktivitas dari hari kerja terakhir berhasil ditiru',
+          );
+        }
+      } else {
+        success = false;
+      }
+
+      if (!success) {
+        _showErrorSnackbar(
+          'Tidak ada aktivitas ditemukan di hari kerja terakhir',
+        );
+      }
+    }
   }
 }
