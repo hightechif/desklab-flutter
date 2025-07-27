@@ -6,9 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
-  // Ensure that widget binding is initialized before using plugins.
   WidgetsFlutterBinding.ensureInitialized();
-  // Initialize date formatting for the Indonesian locale.
   await initializeDateFormatting('id_ID', null);
   runApp(
     ChangeNotifierProvider(

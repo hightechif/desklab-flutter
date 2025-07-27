@@ -31,16 +31,16 @@ class ProfileScreen extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Row(
+                const Row(
                   children: [
-                    const CircleAvatar(
+                    CircleAvatar(
                       radius: 30,
                       backgroundImage: NetworkImage(
                         'https://placehold.co/100x100/EFEFEF/333333?text=RF',
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    const Column(
+                    SizedBox(width: 16),
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(

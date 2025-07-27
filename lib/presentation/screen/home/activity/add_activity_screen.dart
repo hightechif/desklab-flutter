@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 class AddActivityScreen extends StatefulWidget {
   final Activity? activity;
-  final DateTime? selectedDate; // Accept the selected date
+  final DateTime? selectedDate;
   const AddActivityScreen({super.key, this.activity, this.selectedDate});
   @override
   State<AddActivityScreen> createState() => _AddActivityScreenState();
@@ -32,7 +32,6 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       text: widget.activity?.hours.toString(),
     );
     _notesController = TextEditingController(text: widget.activity?.notes);
-    // Use the date from the existing activity if editing, or the passed selectedDate, or today as a fallback.
     _dateForActivity =
         widget.activity?.activityDate ?? widget.selectedDate ?? DateTime.now();
   }
@@ -71,12 +70,14 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       _showLoadingDialog();
       Timer(const Duration(seconds: 1), () {
         final newActivity = Activity(
-          id: widget.activity?.id, // Preserve id if editing
+          // CHANGED: Ensure a unique ID is always present. Use the existing one if editing,
+          // or create a new one based on the timestamp for new activities.
+          id: widget.activity?.id ?? DateTime.now().toIso8601String(),
           project: _projectController.text,
           activityName: _activityController.text,
           hours: int.parse(_hoursController.text),
           notes: _notesController.text,
-          activityDate: _dateForActivity, // Use the determined date
+          activityDate: _dateForActivity,
           color:
               isEditing
                   ? widget.activity!.color

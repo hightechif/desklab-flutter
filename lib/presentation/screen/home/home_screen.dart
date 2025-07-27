@@ -51,21 +51,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Listen to the provider to get real-time updates for the weekly hours.
     final activityProvider = Provider.of<ActivityProvider>(context);
-    int weeklyHours = 0;
-    activityProvider.activitiesByDay.forEach((day, activities) {
-      for (var activity in activities) {
-        weeklyHours += activity.hours;
-      }
-    });
+    // CHANGED: Requirement 1 - The home screen card ALWAYS shows the total for the CURRENT week.
+    // Adding activities to other weeks will not affect this value.
+    final int currentWeeklyHours = activityProvider.getTotalHoursForWeek(
+      DateTime.now(),
+    );
 
     return Scaffold(
       body: SafeArea(
-        // Use a Column to separate static content from the scrollable list
         child: Column(
           children: [
-            // --- START: NON-SCROLLABLE CONTENT ---
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: Column(
@@ -73,8 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   _buildHeader(),
                   const SizedBox(height: 24),
-                  // Pass the dynamic weekly hours to the card widget.
-                  _buildWeeklyActivityCard(context, weeklyHours),
+                  _buildWeeklyActivityCard(context, currentWeeklyHours),
                   const SizedBox(height: 16),
                   _buildActionButtons(context),
                   const SizedBox(height: 24),
@@ -82,9 +77,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            // --- END: NON-SCROLLABLE CONTENT ---
-
-            // --- START: SCROLLABLE LIST ---
             Expanded(
               child:
                   _filteredEvents.isEmpty
@@ -101,7 +93,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                       ),
             ),
-            // --- END: SCROLLABLE LIST ---
           ],
         ),
       ),
@@ -160,6 +151,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildWeeklyActivityCard(BuildContext context, int weeklyHours) {
     return GestureDetector(
+      // CHANGED: Requirement 2 - Clicking this opens the detail screen, which will
+      // now default to showing the current week's activities.
       onTap: () => context.push('/activity-details'),
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -285,12 +278,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         const SizedBox(height: 8),
-        // Filter Chips
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              // Divisi Dropdown (static for now)
               Padding(
                 padding: const EdgeInsets.only(right: 8.0),
                 child: Chip(
@@ -326,7 +317,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
         ),
@@ -341,7 +332,6 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Date part, shown only for the first item of the day
           SizedBox(
             width: 50,
             child:
@@ -364,7 +354,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     : null,
           ),
           const SizedBox(width: 8),
-          // Event details card
           Expanded(
             child: Container(
               margin: const EdgeInsets.only(bottom: 10),

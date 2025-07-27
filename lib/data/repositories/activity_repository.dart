@@ -2,12 +2,9 @@ import 'package:desklab/domain/models/activity.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 
-// --- Activity Repository ---
 class ActivityRepository {
-  /// Parses the new API response and transforms it into the Map structure
-  /// expected by the ActivityProvider.
-  Map<int, List<Activity>> getInitialActivities() {
-    // The JSON data provided by the user, embedded as a string.
+  // CHANGED: The method now returns a flat List<Activity> instead of a Map.
+  List<Activity> getInitialActivities() {
     const apiResponse = '''
     [
       {
@@ -103,39 +100,28 @@ class ActivityRepository {
     ]
     ''';
 
-    // Decode the JSON string into a List of dynamic objects.
     final List<dynamic> parsedJson = jsonDecode(apiResponse);
+    final List<Activity> allActivities = [];
 
-    // This map will hold the final, structured data.
-    final Map<int, List<Activity>> activitiesByDay = {};
-
-    // Helper function to convert a hex color string (e.g., "#546E7A") to a Color object.
     Color hexToColor(String code) {
       try {
         return Color(int.parse(code.substring(1, 7), radix: 16) + 0xFF000000);
       } catch (e) {
-        return Colors.grey; // Fallback color
+        return Colors.grey;
       }
     }
 
-    // Iterate over each project group in the JSON response.
     for (var projectActivityJson in parsedJson) {
-      // Extract parent-level information that applies to all nested activities.
       final String project =
           '${projectActivityJson['clientName']}-${projectActivityJson['clientDivisionName']}-${projectActivityJson['clientProjectName']}-${projectActivityJson['clientSubProjectName']}';
       final String activityName = projectActivityJson['activityName'];
       final Color color = hexToColor(projectActivityJson['hexCode']);
 
-      // Iterate through the nested 'activities' list (the individual work logs).
       for (var activityLogJson in projectActivityJson['activities']) {
-        // Parse the date string into a DateTime object.
         final DateTime activityDate = DateTime.parse(
           activityLogJson['activityDate'],
         );
-        // Determine the day of the week (0 for Monday, 6 for Sunday).
-        final int dayIndex = activityDate.weekday - 1;
 
-        // Create a new Activity instance with combined data.
         final activity = Activity(
           id: activityLogJson['id'],
           project: project,
@@ -143,17 +129,11 @@ class ActivityRepository {
           hours: activityLogJson['workHour'],
           activityDate: activityDate,
           color: color,
-          notes: null, // 'notes' field is not present in the API response.
+          notes: null,
         );
-
-        // Add the created activity to our map, grouped by the day index.
-        if (activitiesByDay.containsKey(dayIndex)) {
-          activitiesByDay[dayIndex]!.add(activity);
-        } else {
-          activitiesByDay[dayIndex] = [activity];
-        }
+        allActivities.add(activity);
       }
     }
-    return activitiesByDay;
+    return allActivities;
   }
 }

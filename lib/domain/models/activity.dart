@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Activity {
-  final String? id; // Null for new activities not yet saved to a backend
+  final String id;
   final String project;
   final String activityName;
   final int hours;
@@ -10,7 +10,7 @@ class Activity {
   String? notes;
 
   Activity({
-    this.id,
+    required this.id,
     required this.project,
     required this.activityName,
     required this.hours,

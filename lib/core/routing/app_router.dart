@@ -15,11 +15,9 @@ final router = GoRouter(
     GoRoute(
       path: '/employee-details',
       builder: (context, state) {
-        final employee =
-            state.extra as Employee; // Safely cast the extra object
+        final employee = state.extra as Employee;
         return EmployeeDetailScreen(employee: employee);
       },
     ),
-    // Add other routes here as your app grows
   ],
 );

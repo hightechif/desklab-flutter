@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'add_activity_screen.dart';
 import 'report/report_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
 class ActivityDetailScreen extends StatefulWidget {
   const ActivityDetailScreen({super.key});
@@ -13,29 +14,26 @@ class ActivityDetailScreen extends StatefulWidget {
 }
 
 class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
-  // State for the calendar
   bool _isCalendarOpen = false;
-  // Set initial date to match the screenshots for consistency
-  DateTime _selectedDate = DateTime(2025, 7, 21);
+  // CHANGED: Requirement 7 - State is now initialized to the current date,
+  // ensuring the screen always opens to "today" and the current week.
+  late DateTime _selectedDate;
   late DateTime _displayMonth;
-
-  // Getter for the selected day index (0=Monday, 6=Sunday)
-  int get _selectedDayIndex => _selectedDate.weekday - 1;
 
   @override
   void initState() {
     super.initState();
+    // ADDED: Initialize state to today's date every time the widget is created.
+    _selectedDate = DateTime.now();
     _displayMonth = DateTime(_selectedDate.year, _selectedDate.month);
   }
 
-  /// Toggles the visibility of the month calendar view.
   void _toggleCalendar() {
     setState(() {
       _isCalendarOpen = !_isCalendarOpen;
     });
   }
 
-  /// Changes the displayed month in the calendar view.
   void _changeMonth(int increment) {
     setState(() {
       _displayMonth = DateTime(
@@ -45,23 +43,19 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     });
   }
 
-  /// Updates the selected date and closes the calendar.
   void _selectDate(DateTime newDate) {
     setState(() {
       _selectedDate = newDate;
-      // Also update the display month to match the newly selected date
       _displayMonth = DateTime(newDate.year, newDate.month);
-      _isCalendarOpen = false; // Close calendar on date selection
+      _isCalendarOpen = false;
     });
   }
 
-  /// Helper to get the ISO week number for a given date.
   int getWeekOfYear(DateTime date) {
     final dayOfYear = int.parse(DateFormat("D").format(date));
     return ((dayOfYear - date.weekday + 10) / 7).floor();
   }
 
-  /// Helper to get all DateTime objects for the week of a given date.
   List<DateTime> getDaysInWeek(DateTime date) {
     final firstDayOfWeek = date.subtract(Duration(days: date.weekday - 1));
     return List.generate(
@@ -73,27 +67,22 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final activityProvider = Provider.of<ActivityProvider>(context);
-    final currentActivities = activityProvider.getActivitiesForDay(
-      _selectedDayIndex,
+
+    // CHANGED: Fetch activities and hours using the new date-based provider methods.
+    final currentActivities = activityProvider.getActivitiesForDate(
+      _selectedDate,
     );
-
-    int dailyHours = 0;
-    for (var activity in currentActivities) {
-      dailyHours += activity.hours;
-    }
-
-    int weeklyHours = 0;
-    activityProvider.activitiesByDay.forEach((day, activities) {
-      for (var activity in activities) {
-        weeklyHours += activity.hours;
-      }
-    });
+    final int dailyHours = activityProvider.getTotalHoursForDate(_selectedDate);
+    final int weeklyHours = activityProvider.getTotalHoursForWeek(
+      _selectedDate,
+    );
 
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
+          // CHANGED: Use context.pop() for correct navigation with go_router.
+          onPressed: () => context.pop(),
         ),
         title: const Text(
           'Aktivitas Anda',
@@ -126,7 +115,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
           if (_isCalendarOpen)
             _buildMonthCalendar()
           else
-            // Use Expanded to make the ListView take the remaining space
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -148,18 +136,16 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
         padding: const EdgeInsets.only(bottom: 80.0),
         child: ElevatedButton.icon(
           onPressed: () async {
-            final result = await Navigator.push(
+            final result = await Navigator.push<Activity?>(
               context,
               MaterialPageRoute(
                 builder:
-                    (context) => AddActivityScreen(
-                      // Pass the selected date to the AddActivityScreen
-                      selectedDate: _selectedDate,
-                    ),
+                    (context) => AddActivityScreen(selectedDate: _selectedDate),
               ),
             );
-            if (result != null && result is Activity) {
-              activityProvider.addActivity(_selectedDayIndex, result);
+            if (result != null) {
+              // CHANGED: Use the new provider method to add the activity object.
+              activityProvider.addActivity(result);
               _showSuccessSnackbar("Anda berhasil menambahkan aktivitas");
             }
           },
@@ -179,7 +165,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
-  /// Builds the header with the month, year, and toggle/navigation arrows.
   Widget _buildDateHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 16, 16, 16),
@@ -232,7 +217,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
-  /// Builds the horizontal list of days for the selected week.
   Widget _buildWeekSelector() {
     final weekDays = getDaysInWeek(_selectedDate);
     const dayNames = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
@@ -250,23 +234,25 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
             day.month == _selectedDate.month &&
             day.day == _selectedDate.day;
 
-        // Calculate total hours and determine dot color for the day
+        // CHANGED: Requirement 6 - Updated dot indicator logic.
         Color? dotColor;
-        // Only calculate for weekdays (index 0-4 for Mon-Fri)
-        if (index < 5) {
-          final activities = activityProvider.getActivitiesForDay(index);
-          final totalHours = activities.fold<int>(
-            0,
-            (sum, item) => sum + item.hours,
-          );
-          dotColor = totalHours >= 8 ? Colors.green : Colors.red;
+        // The dot indicator color only exists on weekdays (Mon-Fri).
+        if (day.weekday >= 1 && day.weekday <= 5) {
+          final totalHours = activityProvider.getTotalHoursForDate(day);
+          // If total hours are 8 or more, the dot is green.
+          if (totalHours >= 8) {
+            dotColor = Colors.green;
+          } else {
+            // If hours are less than 8 (including 0), the dot is red.
+            dotColor = Colors.red;
+          }
         }
 
         return _buildDay(
           dayNames[index],
           '${day.day}',
           isSelected: isSelected,
-          isWeekend: index > 4,
+          isWeekend: day.weekday > 5,
           onTap: () => _selectDate(day),
           dotColor: dotColor,
         );
@@ -274,7 +260,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
-  /// Builds a single day item for the week selector.
   Widget _buildDay(
     String dayName,
     String dayNum, {
@@ -317,19 +302,17 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                 ),
               ),
               const SizedBox(height: 4),
-              // Dot indicator with color logic
               if (dotColor != null)
                 Container(
                   width: 5,
                   height: 5,
                   decoration: BoxDecoration(
-                    // If the day is selected, the dot should be white for contrast
                     color: isSelected ? Colors.white : dotColor,
                     shape: BoxShape.circle,
                   ),
                 )
               else
-                const SizedBox(height: 5), // Placeholder to keep alignment
+                const SizedBox(height: 5),
             ],
           ),
         ),
@@ -337,7 +320,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
-  /// Builds the full month calendar view.
   Widget _buildMonthCalendar() {
     final dayLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
     final firstDayOfMonth = DateTime(
@@ -463,14 +445,20 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
             final result = await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => AddActivityScreen(activity: activity),
+                builder:
+                    (context) => AddActivityScreen(
+                      activity: activity,
+                      selectedDate: _selectedDate,
+                    ),
               ),
             );
             if (result != null && result is Activity) {
-              activityProvider.updateActivity(_selectedDayIndex, index, result);
+              // CHANGED: Update using the activity's unique ID.
+              activityProvider.updateActivity(activity.id, result);
               _showSuccessSnackbar("Anda berhasil mengubah aktivitas");
             } else if (result == 'delete') {
-              _showDeleteConfirmation(index);
+              // CHANGED: Pass the ID to the delete confirmation.
+              _showDeleteConfirmation(activity.id);
             }
           },
           child: Card(
@@ -640,7 +628,8 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
-  void _showDeleteConfirmation(int listIndex) {
+  // CHANGED: Method now accepts the activity's unique ID for deletion.
+  void _showDeleteConfirmation(String activityId) {
     final activityProvider = Provider.of<ActivityProvider>(
       context,
       listen: false,
@@ -667,7 +656,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                 child: const Text('Ya, Hapus'),
                 onPressed: () {
                   Navigator.of(context).pop();
-                  activityProvider.deleteActivity(_selectedDayIndex, listIndex);
+                  activityProvider.deleteActivity(activityId);
                   _showSuccessSnackbar("Anda berhasil menghapus aktivitas");
                 },
               ),
